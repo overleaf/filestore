@@ -62,9 +62,9 @@ describe "fsWrapperTests", ->
 			@s3Wrapper.insertFile.calledOnce.should.equal true
 			done()
 
-	describe "test invalid mixins", ->
+	describe "test unspecified mixins", ->
 
-		it "should not load a null wrapper", (done) ->
+		it "should load s3 when no wrapper specified", (done) ->
 			@settings =
 			@requires =
 				"./s3Wrapper": @s3Wrapper
@@ -72,12 +72,13 @@ describe "fsWrapperTests", ->
 				"logger-sharelatex":
 					log:->
 					err:->
-			try
-				@fsWrapper=SandboxedModule.require modulePath, requires: @requires
-			catch error
-				assert.equal("Unknown filestore backend: null",error.message)
+			@fsWrapper=SandboxedModule.require modulePath, requires: @requires
+			@fsWrapper.should.respondTo("getFileStream")
+			@fsWrapper.getFileStream()
+			@s3Wrapper.getFileStream.calledOnce.should.equal true
 			done()
 
+	describe "test invalid mixins", ->
 		it "should not load an invalid wrapper", (done) ->
 			@settings =
 				filestoreBackend:"magic"
@@ -87,10 +88,12 @@ describe "fsWrapperTests", ->
 				"logger-sharelatex":
 					log:->
 					err:->
+			@fsWrapper=null
 			try
 				@fsWrapper=SandboxedModule.require modulePath, requires: @requires
 			catch error
 				assert.equal("Unknown filestore backend: magic",error.message)
+			assert.isNull(@fsWrapper)
 			done()
 
 

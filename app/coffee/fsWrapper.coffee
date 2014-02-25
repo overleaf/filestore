@@ -4,7 +4,7 @@ s3Wrapper = require("./s3Wrapper")
 
 logger.log backend:settings.filestoreBackend,"Loading backend"
 module.exports = switch settings.filestoreBackend
-	when "s3"
+	when "s3",null
 		s3Wrapper
 	else
 		throw new Error( "Unknown filestore backend: #{settings.filestoreBackend}" )
