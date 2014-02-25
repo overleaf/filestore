@@ -9,7 +9,7 @@ SandboxedModule = require('sandboxed-module')
 describe "FileController", ->
 
 	beforeEach ->
-		@FsWrapper =
+		@FilestoreManager =
 			sendStreamToS3: sinon.stub()
 			copyFile: sinon.stub()
 			deleteFile:sinon.stub()
@@ -26,7 +26,7 @@ describe "FileController", ->
 		@controller = SandboxedModule.require modulePath, requires:
 			"./LocalFileWriter":@LocalFileWriter
 			"./FileHandler": @FileHandler
-			"./fsWrapper":@FsWrapper
+			"./FilestoreManager":@FilestoreManager
 			"settings-sharelatex": @settings
 			"logger-sharelatex":
 				log:->
@@ -73,7 +73,7 @@ describe "FileController", ->
 
 	describe "insertFile", ->
 
-		it "should send bucket name key and res to FsWrapper", (done)->
+		it "should send bucket name key and res to FilestoreManager", (done)->
 			@FileHandler.insertFile.callsArgWith(3)
 			@res.send = =>
 				@FileHandler.insertFile.calledWith(@bucket, @key, @req).should.equal true
@@ -90,17 +90,17 @@ describe "FileController", ->
 					project_id: @oldProject_id
 					file_id: @oldFile_id
 
-		it "should send bucket name and both keys to FsWrapper", (done)->
-			@FsWrapper.copyFile.callsArgWith(3)
+		it "should send bucket name and both keys to FilestoreManager", (done)->
+			@FilestoreManager.copyFile.callsArgWith(3)
 			@res.send = (code)=>
 				code.should.equal 200
-				@FsWrapper.copyFile.calledWith(@bucket, "#{@oldProject_id}/#{@oldFile_id}", @key).should.equal true
+				@FilestoreManager.copyFile.calledWith(@bucket, "#{@oldProject_id}/#{@oldFile_id}", @key).should.equal true
 				done()
 			@controller.copyFile @req, @res
 
 
 		it "should send a 500 if there was an error", (done)->
-			@FsWrapper.copyFile.callsArgWith(3, "error")
+			@FilestoreManager.copyFile.callsArgWith(3, "error")
 			@res.send = (code)=>
 				code.should.equal 500
 				done()
