@@ -13,7 +13,7 @@ module.exports =
 	insertFile: (bucket, key, stream, callback)->
 		convetedKey = KeyBuilder.getConvertedFolderKey(key)
 		FilestoreManager.deleteDirectory bucket, convetedKey, ->
-			FilestoreManager.sendStreamToS3 bucket, key, stream, ->
+			FilestoreManager.sendStream bucket, key, stream, ->
 				callback()
 
 	deleteFile: (bucket, key, callback)->
@@ -53,7 +53,7 @@ module.exports =
 				if err?
 					logger.err err:err, fsPath:fsPath, bucket:bucket, key:key, opts:opts, "something went wrong optimising png file"
 					return callback(err)
-				FilestoreManager.sendFileToS3 bucket, convetedKey, fsPath, (err)->
+				FilestoreManager.sendFile bucket, convetedKey, fsPath, (err)->
 					if err?
 						logger.err err:err, bucket:bucket, key:key, convetedKey:convetedKey, opts:opts, "something went wrong sending the file"
 						return callback(err)

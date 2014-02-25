@@ -10,7 +10,7 @@ describe "FileController", ->
 
 	beforeEach ->
 		@FilestoreManager =
-			sendStreamToS3: sinon.stub()
+			sendStream: sinon.stub()
 			copyFile: sinon.stub()
 			deleteFile:sinon.stub()
 

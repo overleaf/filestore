@@ -51,7 +51,7 @@ describe "S3FilestoreManagerTests", ->
 			@stubbedKnoxClient.get.calledWith(@key).should.equal true 
 			done()
 
-	describe "sendFileToS3", ->
+	describe "sendFile", ->
 
 		beforeEach ->
 			@S3FilestoreManager = SandboxedModule.require modulePath, requires: @requires
@@ -60,7 +60,7 @@ describe "S3FilestoreManagerTests", ->
 		it "should put file with knox", (done)->
 			@LocalFileWriter.deleteFile.callsArgWith(1)
 			@stubbedKnoxClient.putFile.callsArgWith(2, @error)
-			@S3FilestoreManager.sendFileToS3 @bucketName, @key, @fsPath, (err)=>
+			@S3FilestoreManager.sendFile @bucketName, @key, @fsPath, (err)=>
 				@stubbedKnoxClient.putFile.calledWith(@fsPath, @key).should.equal true
 				err.should.equal @error
 				done()
@@ -68,38 +68,38 @@ describe "S3FilestoreManagerTests", ->
 		it "should delete the file and pass the error with it", (done)->
 			@LocalFileWriter.deleteFile.callsArgWith(1)
 			@stubbedKnoxClient.putFile.callsArgWith(2, @error)
-			@S3FilestoreManager.sendFileToS3 @bucketName, @key, @fsPath, (err)=>
+			@S3FilestoreManager.sendFile @bucketName, @key, @fsPath, (err)=>
 				@stubbedKnoxClient.putFile.calledWith(@fsPath, @key).should.equal true
 				err.should.equal @error
 				done()
 
-	describe "sendStreamToS3", ->
+	describe "sendStream", ->
 		beforeEach ->
 			@fsPath = "to/some/where"
-			@origin = 
+			@origin =
 				on:->
 			@S3FilestoreManager = SandboxedModule.require modulePath, requires: @requires
-			@S3FilestoreManager.sendFileToS3 = sinon.stub().callsArgWith(3)
+			@S3FilestoreManager.sendFile = sinon.stub().callsArgWith(3)
 
 		it "should send stream to LocalFileWriter", (done)->
 			@LocalFileWriter.deleteFile.callsArgWith(1)
 			@LocalFileWriter.writeStream.callsArgWith(2, null, @fsPath)
-			@S3FilestoreManager.sendStreamToS3 @bucketName, @key, @origin, =>
+			@S3FilestoreManager.sendStream @bucketName, @key, @origin, =>
 				@LocalFileWriter.writeStream.calledWith(@origin).should.equal true
 				done()
 
 		it "should return the error from LocalFileWriter", (done)->
 			@LocalFileWriter.deleteFile.callsArgWith(1)
 			@LocalFileWriter.writeStream.callsArgWith(2, @error)
-			@S3FilestoreManager.sendStreamToS3 @bucketName, @key, @origin, (err)=>
+			@S3FilestoreManager.sendStream @bucketName, @key, @origin, (err)=>
 				err.should.equal @error
 				done()
 
-		it "should send the file to s3", (done)->
+		it "should send the file to the filestore", (done)->
 			@LocalFileWriter.deleteFile.callsArgWith(1)
 			@LocalFileWriter.writeStream.callsArgWith(2)
-			@S3FilestoreManager.sendStreamToS3 @bucketName, @key, @origin, (err)=>
-				@S3FilestoreManager.sendFileToS3.called.should.equal true
+			@S3FilestoreManager.sendStream @bucketName, @key, @origin, (err)=>
+				@S3FilestoreManager.sendFile.called.should.equal true
 				done()
 
 	describe "copyFile", ->

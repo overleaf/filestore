@@ -16,13 +16,13 @@ describe "FilestoreManagerTests", ->
 			checkIfFileExists: sinon.stub()
 			deleteFile: sinon.stub()
 			deleteDirectory: sinon.stub()
-			sendStreamToS3: sinon.stub()
+			sendStream: sinon.stub()
 			insertFile: sinon.stub()
 
 	describe "test s3 mixin", ->
 		beforeEach ->
 			@settings =
-				filestoreBackend: "s3"
+				filestoreManager: "s3"
 			@requires =
 				"./S3FilestoreManager": @S3FilestoreManager
 				"settings-sharelatex": @settings
@@ -52,9 +52,9 @@ describe "FilestoreManagerTests", ->
 			@S3FilestoreManager.deleteDirectory.calledOnce.should.equal true
 			done()
 
-		it "should load sendStreamToS3", (done) ->
-			@FilestoreManager.sendStreamToS3()
-			@S3FilestoreManager.sendStreamToS3.calledOnce.should.equal true
+		it "should load sendStream", (done) ->
+			@FilestoreManager.sendStream()
+			@S3FilestoreManager.sendStream.calledOnce.should.equal true
 			done()
 
 		it "should load insertFile", (done) ->
@@ -81,7 +81,7 @@ describe "FilestoreManagerTests", ->
 	describe "test invalid mixins", ->
 		it "should not load an invalid manager", (done) ->
 			@settings =
-				filestoreBackend:"magic"
+				filestoreManager:"magic"
 			@requires =
 				"./S3FilestoreManager": @S3FilestoreManager
 				"settings-sharelatex": @settings

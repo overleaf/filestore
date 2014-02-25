@@ -18,7 +18,7 @@ describe "FileHandler", ->
 			checkIfFileExists: sinon.stub()
 			deleteFile: sinon.stub()
 			deleteDirectory: sinon.stub()
-			sendStreamToS3: sinon.stub()
+			sendStream: sinon.stub()
 			insertFile: sinon.stub()
 		@LocalFileWriter =
 			writeStream: sinon.stub()
@@ -51,11 +51,11 @@ describe "FileHandler", ->
 		beforeEach ->
 			@stream = {}
 			@FilestoreManager.deleteDirectory.callsArgWith(2)
-			@FilestoreManager.sendStreamToS3.callsArgWith(3)
+			@FilestoreManager.sendStream.callsArgWith(3)
 
 		it "should send file to the filestore", (done)->
 			@handler.insertFile @bucket, @key, @stream, =>
-				@FilestoreManager.sendStreamToS3.calledWith(@bucket, @key, @stream).should.equal true
+				@FilestoreManager.sendStream.calledWith(@bucket, @key, @stream).should.equal true
 				done()
 
 		it "should delete the convetedKey folder", (done)->
@@ -134,14 +134,14 @@ describe "FileHandler", ->
 	describe "_getConvertedFileAndCache", ->
 
 		it "should _convertFile ", (done)->
-			@FilestoreManager.sendFileToS3 = sinon.stub().callsArgWith(3)
+			@FilestoreManager.sendFile = sinon.stub().callsArgWith(3)
 			@FilestoreManager.getFileStream = sinon.stub().callsArgWith(2)
 			@convetedKey = @key+"converted"
 			@handler._convertFile = sinon.stub().callsArgWith(3, null, @stubbedPath)
 			@ImageOptimiser.compressPng = sinon.stub().callsArgWith(1)
 			@handler._getConvertedFileAndCache @bucket, @key, @convetedKey, {}, =>
 				@handler._convertFile.called.should.equal true
-				@FilestoreManager.sendFileToS3.calledWith(@bucket, @convetedKey, @stubbedPath).should.equal true
+				@FilestoreManager.sendFile.calledWith(@bucket, @convetedKey, @stubbedPath).should.equal true
 				@FilestoreManager.getFileStream.calledWith(@bucket, @convetedKey).should.equal true
 				@ImageOptimiser.compressPng.calledWith(@stubbedPath).should.equal true
 				done()
