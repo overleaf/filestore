@@ -8,3 +8,16 @@ module.exports = switch settings.filestoreManager
 		S3FilestoreManager
 	else
 		throw new Error( "Unknown filestore backend: #{settings.filestoreManager}" )
+
+###
+A filestore must expose the following methods:
+
+sendFile   ( location, target, source, callback = (error)->)
+sendStream ( location, target, source stream, callback = (error)->)  
+getFileStream ( location, name, callback = (error, result)-> )
+copyFile ( location, from, to, callback = (error)->)
+deleteFile ( location, name, callback = (error)->)
+deleteDirectory ( location, name, callback = (error)->)
+checkIfFileExists (location, name, callback = (error,result)-> )
+
+###
