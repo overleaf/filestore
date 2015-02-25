@@ -37,8 +37,7 @@ module.exports =
         callback null, response().html('NoSuchKey: file not found\n')
       else
         callback err
-    sourceStream.on 'readable', () ->
-      callback null, sourceStream
+    callback null, sourceStream
 
 
   copyFile: (location, fromName, toName, callback = (err)->)->
