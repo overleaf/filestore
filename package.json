@@ -37,7 +37,7 @@
     "request": "2.14.0",
     "response": "0.14.0",
     "rimraf": "2.2.8",
-    "settings-sharelatex": "git+https://github.com/sharelatex/settings-sharelatex.git#v1.0.0",
+    "settings-sharelatex": "git+https://github.com/sharelatex/settings-sharelatex.git#75c812eecd6b6803de38a2f68f4d07edc63da064",
     "stream-buffers": "~0.2.5",
     "underscore": "~1.5.2"
   },
@@ -57,6 +57,7 @@
     "grunt-nodemon": "0.2.1",
     "mocha": "^4.1.0",
     "sandboxed-module": "",
-    "sinon": ""
+    "sinon": "",
+    "stream-browserify": "^2.0.1"
   }
 }
