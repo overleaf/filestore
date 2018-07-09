@@ -39,11 +39,7 @@ Thumbs.db
 test/IntergrationTests/js/*
 data/*/*
 
-app.js
 cluster.js
-app/js/*
-test/IntergrationTests/js/*
-test/UnitTests/js/*
 cookies.txt
 uploads/*
 public/js/editor.js
@@ -53,8 +49,6 @@ public/js/gui.js
 public/js/admin.js
 public/stylesheets/mainStyle.css
 public/minjs/
-test/unit/js/
-test/acceptence/js
 cluster.js
 
 user_files/*

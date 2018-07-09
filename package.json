@@ -7,8 +7,17 @@
     "url": "https://github.com/sharelatex/filestore-sharelatex.git"
   },
   "scripts": {
-    "compile:app": "coffee -o app/js -c app/coffee && coffee -c app.coffee",
-    "start": "npm run compile:app && node app.js"
+    "compile:app": "([ -e app/coffee ] && coffee $COFFEE_OPTIONS -o app/js -c app/coffee || echo 'No CoffeeScript folder to compile') && ( [ -e app.coffee ] && coffee $COFFEE_OPTIONS -c app.coffee || echo 'No CoffeeScript app to compile')",
+    "start": "npm run compile:app && node $NODE_APP_OPTIONS app.js",
+    "test:acceptance:_run": "mocha --recursive --reporter spec --timeout 30000 --exit $@ test/acceptance/js",
+    "test:acceptance": "npm run compile:app && npm run compile:acceptance_tests && npm run test:acceptance:_run -- --grep=$MOCHA_GREP",
+    "test:unit:_run": "mocha --recursive --reporter spec --exit $@ test/unit/js",
+    "test:unit": "npm run compile:app && npm run compile:unit_tests && npm run test:unit:_run -- --grep=$MOCHA_GREP",
+    "compile:smoke_tests": "[ ! -e test/smoke/coffee ] &&  echo 'No smoke tests to compile' || coffee -o test/smoke/js -c test/smoke/coffee",
+    "compile:unit_tests": "[ ! -e test/unit/coffee ] &&  echo 'No unit tests to compile' || coffee -o test/unit/js -c test/unit/coffee",
+    "compile:acceptance_tests": "[ ! -e test/acceptance/coffee ] && echo 'No acceptance tests to compile' || coffee -o test/acceptance/js -c test/acceptance/coffee",
+    "compile:all": "npm run compile:app && npm run compile:unit_tests && npm run compile:acceptance_tests && npm run compile:smoke_tests",
+    "nodemon": "nodemon --config nodemon.json"
   },
   "dependencies": {
     "async": "~0.2.10",
@@ -33,20 +42,21 @@
     "underscore": "~1.5.2"
   },
   "devDependencies": {
-    "sinon": "",
-    "chai": "",
-    "sandboxed-module": "",
     "bunyan": "^1.3.5",
+    "chai": "",
     "grunt": "0.4.1",
     "grunt-bunyan": "^0.5.0",
-    "grunt-execute": "^0.2.2",
-    "grunt-mocha-test": "~0.8.2",
-    "grunt-contrib-requirejs": "0.4.1",
-    "grunt-contrib-coffee": "0.7.0",
-    "grunt-contrib-watch": "0.5.3",
-    "grunt-nodemon": "0.2.1",
-    "grunt-contrib-clean": "0.5.0",
     "grunt-concurrent": "0.4.2",
-    "grunt-forever": "~0.4.4"
+    "grunt-contrib-clean": "0.5.0",
+    "grunt-contrib-coffee": "0.7.0",
+    "grunt-contrib-requirejs": "0.4.1",
+    "grunt-contrib-watch": "0.5.3",
+    "grunt-execute": "^0.2.2",
+    "grunt-forever": "~0.4.4",
+    "grunt-mocha-test": "~0.8.2",
+    "grunt-nodemon": "0.2.1",
+    "mocha": "^4.1.0",
+    "sandboxed-module": "",
+    "sinon": ""
   }
 }
