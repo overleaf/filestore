@@ -3,125 +3,122 @@
  * DS102: Remove unnecessary code created because of implicit returns
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-module.exports = function(grunt) {
+module.exports = function (grunt) {
+  // Project configuration.
+  grunt.initConfig({
+    forever: {
+      app: {
+        options: {
+          index: 'app.js'
+        }
+      }
+    },
 
-	// Project configuration.
-	grunt.initConfig({
-		forever: {
-			app: {
-				options: {
-					index: "app.js"
-				}
-			}
-		},
+    coffee: {
+      server: {
+        expand: true,
+        flatten: false,
+        cwd: 'app/coffee',
+        src: ['**/*.coffee'],
+        dest: 'app/js/',
+        ext: '.js'
+      },
 
-		coffee: {
-			server: { 
-				expand: true,
-				flatten: false,
-				cwd: 'app/coffee',
-				src: ['**/*.coffee'],
-				dest: 'app/js/',
-				ext: '.js'
-			},
+      app_server: {
+        expand: true,
+        flatten: false,
+        src: ['app.coffee', 'cluster.coffee'],
+        dest: './',
+        ext: '.js'
+      },
 
-			app_server: { 
-				expand: true,
-				flatten: false,
-				src: ['app.coffee', 'cluster.coffee'],
-				dest: './',
-				ext: '.js'
-			},
+      server_tests: {
+        expand: true,
+        flatten: false,
+        cwd: 'test/acceptence/coffee',
+        src: ['*.coffee', '**/*.coffee'],
+        dest: 'test/acceptence/js/',
+        ext: '.js'
+      },
 
-			server_tests: {
-				expand: true,
-				flatten: false,
-				cwd: 'test/acceptence/coffee',
-				src: ['*.coffee', '**/*.coffee'],
-				dest: 'test/acceptence/js/',
-				ext: '.js'
-			},
+      server_acc_tests: {
+        expand: true,
+        flatten: false,
+        cwd: 'test/unit/coffee',
+        src: ['*.coffee', '**/*.coffee'],
+        dest: 'test/unit/js/',
+        ext: '.js'
+      }
+    },
 
-			server_acc_tests: {
-				expand: true,
-				flatten: false,
-				cwd: 'test/unit/coffee',
-				src: ['*.coffee', '**/*.coffee'],
-				dest: 'test/unit/js/',
-				ext: '.js'
-			}
-		},
+    watch: {
+      server_coffee: {
+        files: ['app/*.coffee', 'app/**/*.coffee', 'test/unit/coffee/**/*.coffee', 'test/unit/coffee/*.coffee', 'app.coffee', 'cluster.coffee'],
+        tasks: ['clean', 'coffee', 'mochaTest']
+      }
+    },
 
-		watch: {
-			server_coffee: {
-				files: ['app/*.coffee','app/**/*.coffee', 'test/unit/coffee/**/*.coffee', 'test/unit/coffee/*.coffee', "app.coffee", "cluster.coffee"],
-				tasks: ["clean", 'coffee', 'mochaTest']
-			}
-		},
+    clean: ['app/js', 'test/unit/js', 'app.js'],
 
-		clean: ["app/js", "test/unit/js", "app.js"],
+    nodemon: {
+      dev: {
+        script: 'app.js',
+        options: {
+          ext: '*.coffee'
+        }
+      }
+    },
 
-		nodemon: {
-			dev: {
-				script: 'app.js',
-				options: {
-					ext:"*.coffee"
-				}
-			}
-		},
+    execute: {
+      app: {
+        src: 'app.js'
+      }
+    },
 
-		execute: {
-			app: {
-				src: "app.js"
-			}
-		},
-				
-		concurrent: {
-			dev: {
-				tasks: ['nodemon', 'watch'],
-				options: {
-					logConcurrentOutput: true
-				}
-			}
-		},
+    concurrent: {
+      dev: {
+        tasks: ['nodemon', 'watch'],
+        options: {
+          logConcurrentOutput: true
+        }
+      }
+    },
 
-		mochaTest: {
-			unit: {
-				src: [`test/unit/js/${grunt.option('feature') || '**'}/*.js`],
-				options: {
-					reporter: grunt.option('reporter') || 'spec',
-					grep: grunt.option("grep")
-				}
-			},
-			acceptence: {
-				src: [`test/acceptence/js/${grunt.option('feature') || '**'}/*.js`],
-				options: {
-					reporter: grunt.option('reporter') || 'spec',
-					grep: grunt.option("grep")
-				}
-			}
-		}
-	});
+    mochaTest: {
+      unit: {
+        src: [`test/unit/js/${grunt.option('feature') || '**'}/*.js`],
+        options: {
+          reporter: grunt.option('reporter') || 'spec',
+          grep: grunt.option('grep')
+        }
+      },
+      acceptence: {
+        src: [`test/acceptence/js/${grunt.option('feature') || '**'}/*.js`],
+        options: {
+          reporter: grunt.option('reporter') || 'spec',
+          grep: grunt.option('grep')
+        }
+      }
+    }
+  })
 
+  grunt.loadNpmTasks('grunt-contrib-coffee')
+  grunt.loadNpmTasks('grunt-contrib-watch')
+  grunt.loadNpmTasks('grunt-nodemon')
+  grunt.loadNpmTasks('grunt-contrib-clean')
+  grunt.loadNpmTasks('grunt-concurrent')
+  grunt.loadNpmTasks('grunt-mocha-test')
+  grunt.loadNpmTasks('grunt-forever')
+  grunt.loadNpmTasks('grunt-bunyan')
+  grunt.loadNpmTasks('grunt-execute')
 
-	grunt.loadNpmTasks('grunt-contrib-coffee');
-	grunt.loadNpmTasks('grunt-contrib-watch');
-	grunt.loadNpmTasks('grunt-nodemon');
-	grunt.loadNpmTasks('grunt-contrib-clean');
-	grunt.loadNpmTasks('grunt-concurrent');
-	grunt.loadNpmTasks('grunt-mocha-test');
-	grunt.loadNpmTasks('grunt-forever');
-	grunt.loadNpmTasks('grunt-bunyan');
-	grunt.loadNpmTasks('grunt-execute');
+  grunt.registerTask('test:unit', ['coffee', 'mochaTest:unit'])
+  grunt.registerTask('test:acceptence', ['coffee', 'mochaTest:acceptence'])
+  grunt.registerTask('test:acceptance', ['test:acceptence'])
 
-	grunt.registerTask("test:unit", ["coffee", "mochaTest:unit"]);
-	grunt.registerTask("test:acceptence", ["coffee", "mochaTest:acceptence"]);
-	grunt.registerTask("test:acceptance", ["test:acceptence"]);
+  grunt.registerTask('ci', 'test:unit')
+  grunt.registerTask('default', ['coffee', 'bunyan', 'execute'])
 
-	grunt.registerTask("ci", "test:unit");
-	grunt.registerTask('default', ['coffee', 'bunyan','execute']);
-
-	grunt.registerTask("compile", "coffee");
-	return grunt.registerTask("install", "compile");
-};
-
+  grunt.registerTask('compile', 'coffee')
+  return grunt.registerTask('install', 'compile')
+}
