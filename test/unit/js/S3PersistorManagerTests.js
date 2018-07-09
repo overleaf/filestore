@@ -10,6 +10,7 @@ const should = chai.should();
 const { expect } = chai;
 const modulePath = "../../../app/js/S3PersistorManager.js";
 const SandboxedModule = require('sandboxed-module');
+const Errors = require('../../../app/js/Errors.js')
 
 describe("S3PersistorManagerTests", function() {
 
@@ -46,9 +47,7 @@ describe("S3PersistorManagerTests", function() {
 			"logger-sharelatex": {
 				log() {},
 				err() {}
-			},
-			"./Errors": (this.Errors =
-				{NotFoundError: sinon.stub()})
+			}
 		};
 		this.key = "my/key";
 		this.bucketName = "my-bucket";
@@ -133,12 +132,10 @@ describe("S3PersistorManagerTests", function() {
 		return describe("error conditions", function() {
 
 			beforeEach(function() {
-				this.fakeResponse =
-					{statusCode: 500};
-				return this.stubbedKnoxClient.get.returns({
+				this.stubbedKnoxClient.get.returns({
 					on: (key, callback) => {
 						if (key === 'response') {
-							return callback(this.fakeResponse);
+							return callback({statusCode: 500});
 						}
 					},
 					end() {}
@@ -146,27 +143,32 @@ describe("S3PersistorManagerTests", function() {
 			});
 
 			describe("when the file doesn't exist", function() {
-
 				beforeEach(function() {
-					return this.fakeResponse =
-						{statusCode: 404};
+					this.stubbedKnoxClient.get.returns({
+						on: (key, callback) => {
+							if (key === 'response') {
+								return callback({statusCode: 404});
+							}
+						},
+						end() {}
+					});
 				});
 
 				it("should produce a NotFoundError", function(done) {
 					return this.S3PersistorManager.getFileStream(this.bucketName, this.key, this.opts, (err, stream)=> { // empty callback
 						expect(stream).to.equal(null);
 						expect(err).to.not.equal(null);
-						expect(err instanceof this.Errors.NotFoundError).to.equal(true);
+						expect(err).to.be.an.instanceOf(Error);
+						expect(err.name).to.eq('NotFoundError');
 						return done();
 					});
 				});
 
 				return it("should have bucket and key in the Error message", function(done) {
 					return this.S3PersistorManager.getFileStream(this.bucketName, this.key, this.opts, (err, stream)=> { // empty callback
-						const error_message = this.Errors.NotFoundError.lastCall.args[0];
-						expect(error_message).to.not.equal(null);
-						error_message.should.match(new RegExp(`.*${this.bucketName}.*`));
-						error_message.should.match(new RegExp(`.*${this.key}.*`));
+						expect(err).to.not.equal(null);
+						err.message.should.match(new RegExp(`.*${this.bucketName}.*`));
+						err.message.should.match(new RegExp(`.*${this.key}.*`));
 						return done();
 					});
 				});
@@ -174,16 +176,21 @@ describe("S3PersistorManagerTests", function() {
 
 			return describe("when the S3 service produces an error", function() {
 				beforeEach(function() {
-					return this.fakeResponse =
-						{statusCode: 500};
+					this.stubbedKnoxClient.get.returns({
+						on: (key, callback) => {
+							if (key === 'response') {
+								return callback({statusCode: 500});
+							}
+						},
+						end() {}
+					});
 				});
 
 				return it("should produce an error", function(done) {
 					return this.S3PersistorManager.getFileStream(this.bucketName, this.key, this.opts, (err, stream)=> { // empty callback
 						expect(stream).to.equal(null);
 						expect(err).to.not.equal(null);
-						expect(err instanceof Error).to.equal(true);
-						this.Errors.NotFoundError.called.should.equal(false);
+						expect(err).to.be.an.instanceOf(Error);
 						return done();
 					});
 				});

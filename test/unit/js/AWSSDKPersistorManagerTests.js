@@ -9,6 +9,7 @@ const chai = require('chai');
 const should = chai.should();
 const { expect } = chai;
 
+const Errors = require('../../../app/js/Errors.js');
 const modulePath = "../../../app/js/AWSSDKPersistorManager.js";
 const SandboxedModule = require('sandboxed-module');
 
@@ -39,9 +40,7 @@ describe("AWSSDKPersistorManager", function() {
 				err() {}
 			},
 			"fs": (this.fs =
-				{createReadStream: sinon.stub()}),
-			"./Errors": (this.Errors =
-				{NotFoundError: sinon.stub()})
+				{createReadStream: sinon.stub()})
 		};
 		this.key = "my/key";
 		this.bucketName = "my-bucket";
@@ -153,7 +152,7 @@ describe("AWSSDKPersistorManager", function() {
 					return this.AWSSDKPersistorManager.getFileStream(this.bucketName, this.key, this.opts, (err, stream) => {
 						expect(stream).to.not.be.ok;
 						expect(err).to.be.ok;
-						expect(err instanceof this.Errors.NotFoundError, "error is a correct instance").to.equal(true);
+						expect(err).to.be.an.instanceOf(Error);
 						return done();
 					});
 				});

@@ -85,15 +85,21 @@ describe("PersistorManagerTests", function() {
 	describe("test unspecified mixins", () =>
 
 		it("should load s3 when no wrapper specified", function(done) {
-			this.settings =
-			(this.requires = {
+			this.settings = {
+				filestore: {
+					backend: null
+				}
+			};
+
+			this.requires = {
 				"./S3PersistorManager": this.S3PersistorManager,
 				"settings-sharelatex": this.settings,
 				"logger-sharelatex": {
 					log() {},
 					err() {}
 				}
-			});
+			};
+
 			this.PersistorManager=SandboxedModule.require(modulePath, {requires: this.requires});
 			this.PersistorManager.should.respondTo("getFileStream");
 			this.PersistorManager.getFileStream();
@@ -128,5 +134,3 @@ describe("PersistorManagerTests", function() {
 		})
 	);
 });
-
-

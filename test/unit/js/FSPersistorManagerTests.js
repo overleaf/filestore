@@ -12,6 +12,7 @@ const modulePath = "../../../app/js/FSPersistorManager.js";
 const SandboxedModule = require('sandboxed-module');
 const fs = require("fs");
 const response = require("response");
+const Errors = require('../../../app/js/Errors.js');
 
 describe("FSPersistorManagerTests", function() {
 
@@ -39,9 +40,7 @@ describe("FSPersistorManagerTests", function() {
         err() {}
       },
       "response":response,
-      "rimraf":this.Rimraf,
-      "./Errors": (this.Errors =
-        {NotFoundError: sinon.stub()})
+      "rimraf":this.Rimraf
     };
     this.location = "/tmp";
     this.name1 = "530f2407e7ef165704000007/530f838b46d9a9e859000008";
@@ -141,7 +140,8 @@ describe("FSPersistorManagerTests", function() {
           return this.FSPersistorManager.getFileStream(this.location, this.name1, this.opts, (err,res)=> {
             expect(res).to.equal(null);
             expect(err).to.not.equal(null);
-            expect(err instanceof this.Errors.NotFoundError).to.equal(true);
+            expect(err).to.be.instanceOf(Error);
+            expect(err.name).to.eq('NotFoundError');
             return done();
           });
         });
