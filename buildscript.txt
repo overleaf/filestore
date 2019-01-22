@@ -1,0 +1,9 @@
+filestore
+--node-version=6.9.5
+--script-version=1.1.11
+--build-target=native
+--kube=false
+--dependencies=mongo,redis
+--language=es
+--docker-repos=quay.io/sharelatex
+--acceptance-creds=None
