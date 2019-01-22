@@ -1,6 +1,5 @@
 set -ex
 
-curl -o .eslintrc https://raw.githubusercontent.com/sharelatex/web-sharelatex/master/.eslintrc
 curl -o .prettierrc https://raw.githubusercontent.com/sharelatex/web-sharelatex/master/.prettierrc
 
 git add .
