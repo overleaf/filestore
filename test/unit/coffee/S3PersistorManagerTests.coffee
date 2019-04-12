@@ -25,11 +25,15 @@ describe "S3PersistorManagerTests", ->
 			get: sinon.stub()
 		@knox =
 			createClient: sinon.stub().returns(@stubbedKnoxClient)
+		@stubbedS3Client =
+			copyObject:sinon.stub()
+		@awsS3 = sinon.stub().returns @stubbedS3Client
 		@LocalFileWriter =
 			writeStream: sinon.stub()
 			deleteFile: sinon.stub()
 		@requires =
 			"knox": @knox
+			"aws-sdk/clients/s3": @awsS3
 			"settings-sharelatex": @settings
 			"./LocalFileWriter":@LocalFileWriter
 			"logger-sharelatex":
@@ -106,21 +110,17 @@ describe "S3PersistorManagerTests", ->
 
 		describe "error conditions", ->
 
-			beforeEach ->
-				@fakeResponse =
-					statusCode: 500
-				@stubbedKnoxClient.get.returns(
-					on: (key, callback) =>
-						if key == 'response'
-							callback(@fakeResponse)
-					end: ->
-				)
-
 			describe "when the file doesn't exist", ->
 
 				beforeEach ->
 					@fakeResponse =
 						statusCode: 404
+					@stubbedKnoxClient.get.returns(
+						on: (key, callback) =>
+							if key == 'response'
+								callback(@fakeResponse)
+						end: ->
+					)
 
 				it "should produce a NotFoundError", (done) ->
 					@S3PersistorManager.getFileStream @bucketName, @key, @opts, (err, stream)=> # empty callback
@@ -141,6 +141,12 @@ describe "S3PersistorManagerTests", ->
 				beforeEach ->
 					@fakeResponse =
 						statusCode: 500
+					@stubbedKnoxClient.get.returns(
+						on: (key, callback) =>
+							if key == 'response'
+								callback(@fakeResponse)
+						end: ->
+					)
 
 				it "should produce an error", (done) ->
 					@S3PersistorManager.getFileStream @bucketName, @key, @opts, (err, stream)=> # empty callback
@@ -207,11 +213,18 @@ describe "S3PersistorManagerTests", ->
 			@destKey = "my/dest/key"
 			@S3PersistorManager = SandboxedModule.require modulePath, requires: @requires
 
-		it "should use knox to copy file", (done)->
-			@stubbedKnoxClient.copyFile.callsArgWith(2, @error)
+		it "should use AWS SDK to copy file", (done)->
+			@stubbedS3Client.copyObject.callsArgWith(1, @error)
 			@S3PersistorManager.copyFile @bucketName, @sourceKey, @destKey, (err)=>
 				err.should.equal @error
-				@stubbedKnoxClient.copyFile.calledWith(@sourceKey, @destKey).should.equal true
+				@stubbedS3Client.copyObject.calledWith({Bucket: @bucketName, Key: @destKey, CopySource: @bucketName + '/' + @key}).should.equal true
+				done()
+
+		it "should return a NotFoundError object if the original file does not exist", (done)->
+			NoSuchKeyError = {code: "NoSuchKey"}
+			@stubbedS3Client.copyObject.callsArgWith(1, NoSuchKeyError)
+			@S3PersistorManager.copyFile @bucketName, @sourceKey, @destKey, (err)=>
+				expect(err instanceof @Errors.NotFoundError).to.equal true
 				done()
 
 	describe "deleteDirectory", ->

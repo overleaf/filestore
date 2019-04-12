@@ -28,7 +28,11 @@ describe "FileController", ->
 			"./LocalFileWriter":@LocalFileWriter
 			"./FileHandler": @FileHandler
 			"./PersistorManager":@PersistorManager
+			"./Errors": @Errors =
+				NotFoundError: sinon.stub()
 			"settings-sharelatex": @settings
+			"metrics-sharelatex": 
+				inc:->
 			"logger-sharelatex":
 				log:->
 				err:->
@@ -108,6 +112,13 @@ describe "FileController", ->
 			@res.send = (code)=>
 				code.should.equal 200
 				@PersistorManager.copyFile.calledWith(@bucket, "#{@oldProject_id}/#{@oldFile_id}", @key).should.equal true
+				done()
+			@controller.copyFile @req, @res
+
+		it "should send a 404 if the original file was not found", (done) ->
+			@PersistorManager.copyFile.callsArgWith(3, new @Errors.NotFoundError())
+			@res.send = (code)=>
+				code.should.equal 404
 				done()
 			@controller.copyFile @req, @res
 
