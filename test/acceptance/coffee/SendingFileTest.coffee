@@ -22,14 +22,13 @@ describe "Filestore", ->
 			"there are 3 lines in all"
 		].join("\n")
 
-		fs.writeFile(@localFileReadPath, @constantFileContent, done)
+		fs.writeFileSync @localFileReadPath, @constantFileContent
 		@filestoreUrl = "http://localhost:#{settings.internal.filestore.port}"
+		FilestoreApp.ensureRunning done
 
 	beforeEach (done)->
-		FilestoreApp.ensureRunning =>
-			fs.unlink @localFileWritePath, ->
-				done()
-
+		fs.unlink @localFileWritePath, ->
+			done()
 
 
 	it "should send a 200 for status endpoing", (done)->
