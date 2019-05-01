@@ -12,6 +12,9 @@ request = require("request")
 settings = require("settings-sharelatex")
 FilestoreApp = require "./FilestoreApp"
 
+userFiles = settings.filestore.stores.user_files
+uploads = settings.path.uploadFolder
+
 describe "Filestore", ->
 
 	before (done)->
@@ -49,132 +52,146 @@ describe "Filestore", ->
 
 	describe "with a file on the server", ->
 
-		beforeEach (done)->
-			@timeout(1000 * 10)
+		beforeEach () ->
 			@file_id = Math.random()
-			@fileUrl = "#{@filestoreUrl}/project/acceptence_tests/file/#{@file_id}"
+			@projectName = "acceptance_tests"
+			@fileUrl = "#{@filestoreUrl}/project/#{@projectName}/file/#{@file_id}"
 
-			writeStream = request.post(@fileUrl)
+		afterEach (done) ->
+			fs.unlink "#{userFiles}/#{@projectName}_#{@file_id}", () =>
+				fs.unlink "#{uploads}/#{@projectName}-#{@file_id}", () ->
+					done()
 
-			writeStream.on "end", done
-			fs.createReadStream(@localFileReadPath).pipe writeStream
+		describe "with plain text file", ->
+			beforeEach (done) ->
+				@timeout(10000 * 10)
+				writeStream = request.post(@fileUrl)
 
-		it "should return 404 for a non-existant id", (done) ->
-			@timeout(1000 * 20)
-			options =
-				uri: @fileUrl + '___this_is_clearly_wrong___'
-			request.get options, (err, response, body) =>
-				response.statusCode.should.equal 404
-				done()
+				writeStream.on "end", done
+				fs.createReadStream(@localFileReadPath).pipe writeStream
 
-		it "should be able get the file back", (done)->
-			@timeout(1000 * 10)
-			request.get @fileUrl, (err, response, body)=>
-				body.should.equal @constantFileContent
-				done()
-
-		it "should be able to get back the first 8 bytes of the file", (done) ->
-			@timeout(1000 * 10)
-			options =
-				uri: @fileUrl
-				headers:
-					'Range': 'bytes=0-8'
-			request.get options, (err, response, body)=>
-				body.should.equal 'hello wor'
-				done()
-
-		it "should be able to get back bytes 4 through 10 of the file", (done) ->
-			@timeout(1000 * 10)
-			options =
-				uri: @fileUrl
-				headers:
-					'Range': 'bytes=4-10'
-			request.get options, (err, response, body)=>
-				body.should.equal 'o world'
-				done()
-
-		it "should be able to delete the file", (done)->
-			@timeout(1000 * 20)
-			request.del @fileUrl, (err, response, body)=>
-				response.statusCode.should.equal 204
-				request.get @fileUrl, (err, response, body)=>
+			it "should return 404 for a non-existant id", (done) ->
+				@timeout(1000 * 20)
+				options =
+					uri: @fileUrl + '___this_is_clearly_wrong___'
+				request.get options, (err, response, body) =>
 					response.statusCode.should.equal 404
 					done()
 
-		it "should be able to copy files", (done)->
-			@timeout(1000 * 20)
+			it "should be able get the file back", (done)->
+				@timeout(1000 * 10)
+				request.get @fileUrl, (err, response, body)=>
+					body.should.equal @constantFileContent
+					done()
 
-			newProjectID = "acceptence_tests_copyied_project"
-			newFileId = Math.random()
-			newFileUrl = "#{@filestoreUrl}/project/#{newProjectID}/file/#{newFileId}"
-			opts =
-				method: 'put'
-				uri: newFileUrl
-				json:
-					source:
-						project_id:"acceptence_tests"
-						file_id: @file_id
-			request opts, (err, response, body)=>
-				response.statusCode.should.equal 200
+			it "should be able to get back the first 8 bytes of the file", (done) ->
+				@timeout(1000 * 10)
+				options =
+					uri: @fileUrl
+					headers:
+						'Range': 'bytes=0-8'
+				request.get options, (err, response, body)=>
+					body.should.equal 'hello wor'
+					done()
+
+			it "should be able to get back bytes 4 through 10 of the file", (done) ->
+				@timeout(1000 * 10)
+				options =
+					uri: @fileUrl
+					headers:
+						'Range': 'bytes=4-10'
+				request.get options, (err, response, body)=>
+					body.should.equal 'o world'
+					done()
+
+			it "should be able to delete the file", (done)->
+				@timeout(1000 * 20)
 				request.del @fileUrl, (err, response, body)=>
 					response.statusCode.should.equal 204
-					request.get newFileUrl, (err, response, body)=>
-						body.should.equal @constantFileContent
+					request.get @fileUrl, (err, response, body)=>
+						response.statusCode.should.equal 404
 						done()
 
-	describe "with a pdf file", ->
+			describe "with a new project", ->
+				before ->
+					@newProjectID = "acceptance_tests_copied_project"
+					@newFileId = Math.random()
+					@newFileUrl = "#{@filestoreUrl}/project/#{@newProjectID}/file/#{@newFileId}"
 
-		beforeEach (done)->
-			@timeout(1000 * 10)
-			@file_id = Math.random()
-			@fileUrl = "#{@filestoreUrl}/project/acceptence_tests/file/#{@file_id}"
-			@localFileReadPath = __dirname + '/../../fixtures/test.pdf'
+				after (done) ->
+					@timeout(10000 * 10)
+					fs.unlink "#{userFiles}/#{@newProjectID}_#{@newFileId}", () ->
+						done()
 
-			writeStream = request.post(@fileUrl)
+				it "should be able to copy files", (done)->
+					@timeout(1000 * 20)
 
-			writeStream.on "end", done
-			fs.createReadStream(@localFileReadPath).pipe writeStream
+					opts =
+						method: 'put'
+						uri: @newFileUrl
+						json:
+							source:
+								project_id: @projectName
+								file_id: @file_id
+					request opts, (err, response, body)=>
+						response.statusCode.should.equal 200
+						request.del @fileUrl, (err, response, body)=>
+							response.statusCode.should.equal 204
+							request.get @newFileUrl, (err, response, body)=>
+								body.should.equal @constantFileContent
+								done()
 
-		it "should be able get the file back", (done)->
-			@timeout(1000 * 10)
-			request.get @fileUrl, (err, response, body)=>
-				expect(body.substring(0, 8)).to.equal '%PDF-1.5'
-				done()
+		describe "with a pdf file", ->
 
-		describe "getting the preview image", ->
+			beforeEach (done)->
+				@timeout(1000 * 10)
+				@localFileReadPath = __dirname + '/../../fixtures/test.pdf'
 
-			beforeEach ->
-				@previewFileUrl = "#{@fileUrl}?style=preview"
+				writeStream = request.post(@fileUrl)
 
-			it "should not time out", (done) ->
-				@timeout(1000 * 20)
-				request.get @previewFileUrl, (err, response, body) =>
-					expect(response).to.not.equal null
+				writeStream.on "end", done
+				fs.createReadStream(@localFileReadPath).pipe writeStream
+
+			it "should be able get the file back", (done)->
+				@timeout(1000 * 10)
+				request.get @fileUrl, (err, response, body)=>
+					expect(body.substring(0, 8)).to.equal '%PDF-1.5'
 					done()
 
-			it "should respond with image data", (done) ->
-				# note: this test relies of the imagemagick conversion working
-				@timeout(1000 * 20)
-				request.get @previewFileUrl, (err, response, body) =>
-					expect(response.statusCode).to.equal 200
-					expect(body.length).to.be.greaterThan 400
-					done()
+			describe "getting the preview image", ->
 
-		describe "warming the cache", ->
+				beforeEach ->
+					@previewFileUrl = "#{@fileUrl}?style=preview"
 
-			beforeEach ->
-				@fileUrl = @fileUrl + '?style=preview&cacheWarm=true'
+				it "should not time out", (done) ->
+					@timeout(1000 * 20)
+					request.get @previewFileUrl, (err, response, body) =>
+						expect(response).to.not.equal null
+						done()
 
-			it "should not time out", (done) ->
-				@timeout(1000 * 20)
-				request.get @fileUrl, (err, response, body) =>
-					expect(response).to.not.equal null
-					done()
+				it "should respond with image data", (done) ->
+					# note: this test relies of the imagemagick conversion working
+					@timeout(1000 * 20)
+					request.get @previewFileUrl, (err, response, body) =>
+						expect(response.statusCode).to.equal 200
+						expect(body.length).to.be.greaterThan 400
+						done()
 
-			it "should respond with only an 'OK'", (done) ->
-				# note: this test relies of the imagemagick conversion working
-				@timeout(1000 * 20)
-				request.get @fileUrl, (err, response, body) =>
-					expect(response.statusCode).to.equal 200
-					body.should.equal 'OK'
-					done()
+			describe "warming the cache", ->
+
+				beforeEach ->
+					@fileUrl = @fileUrl + '?style=preview&cacheWarm=true'
+
+				it "should not time out", (done) ->
+					@timeout(1000 * 20)
+					request.get @fileUrl, (err, response, body) =>
+						expect(response).to.not.equal null
+						done()
+
+				it "should respond with only an 'OK'", (done) ->
+					# note: this test relies of the imagemagick conversion working
+					@timeout(1000 * 20)
+					request.get @fileUrl, (err, response, body) =>
+						expect(response.statusCode).to.equal 200
+						body.should.equal 'OK'
+						done()
