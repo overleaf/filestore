@@ -163,6 +163,11 @@ describe "Filestore", ->
 				beforeEach ->
 					@previewFileUrl = "#{@fileUrl}?style=preview"
 
+				afterEach (done) ->
+					postfix = "converted-cache_style-preview"
+					fs.unlink "#{userFiles}/#{@projectName}_#{@file_id}-#{postfix}", () ->
+						done()
+
 				it "should not time out", (done) ->
 					@timeout(1000 * 20)
 					request.get @previewFileUrl, (err, response, body) =>
@@ -177,21 +182,25 @@ describe "Filestore", ->
 						expect(body.length).to.be.greaterThan 400
 						done()
 
-			describe "warming the cache", ->
+				describe "warming the cache", ->
 
-				beforeEach ->
-					@fileUrl = @fileUrl + '?style=preview&cacheWarm=true'
+					beforeEach ->
+						@cacheCheckUrl = @fileUrl + '?style=preview&cacheWarm=true'
 
-				it "should not time out", (done) ->
-					@timeout(1000 * 20)
-					request.get @fileUrl, (err, response, body) =>
-						expect(response).to.not.equal null
-						done()
+					afterEach (done) ->
+						fs.unlink "#{uploads}/#{@projectName}-#{@file_id}.png", () ->
+							done()
 
-				it "should respond with only an 'OK'", (done) ->
-					# note: this test relies of the imagemagick conversion working
-					@timeout(1000 * 20)
-					request.get @fileUrl, (err, response, body) =>
-						expect(response.statusCode).to.equal 200
-						body.should.equal 'OK'
-						done()
+					it "should not time out", (done) ->
+						@timeout(1000 * 20)
+						request.get @cacheCheckUrl, (err, response, body) =>
+							expect(response).to.not.equal null
+							done()
+
+					it "should respond with only an 'OK'", (done) ->
+						# note: this test relies of the imagemagick conversion working
+						@timeout(1000 * 20)
+						request.get @cacheCheckUrl, (err, response, body) =>
+							expect(response.statusCode).to.equal 200
+							body.should.equal 'OK'
+							done()
