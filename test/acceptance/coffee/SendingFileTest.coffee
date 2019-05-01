@@ -6,6 +6,8 @@ expect = chai.expect
 modulePath = "../../../app/js/LocalFileWriter.js"
 SandboxedModule = require('sandboxed-module')
 fs = require("fs")
+path = require("path")
+os = require("os")
 request = require("request")
 settings = require("settings-sharelatex")
 FilestoreApp = require "./FilestoreApp"
@@ -13,8 +15,10 @@ FilestoreApp = require "./FilestoreApp"
 describe "Filestore", ->
 
 	before (done)->
-		@localFileReadPath = "/tmp/filestore_acceptence_tests_file_read.txt"
-		@localFileWritePath = "/tmp/filestore_acceptence_tests_file_write.txt"
+		prefix = path.join os.tmpdir(), "filestore_acceptance_tests"
+		@tmpDirectory = fs.mkdtempSync prefix
+		@localFileReadPath = "#{@tmpDirectory}/file_read.txt"
+		@localFileWritePath = "#{@tmpDirectory}/file_write.txt"
 
 		@constantFileContent = [
 			"hello world"
@@ -25,6 +29,10 @@ describe "Filestore", ->
 		fs.writeFileSync @localFileReadPath, @constantFileContent
 		@filestoreUrl = "http://localhost:#{settings.internal.filestore.port}"
 		FilestoreApp.ensureRunning done
+
+	after (done) ->
+		fs.unlinkSync @localFileReadPath
+		fs.rmdir @tmpDirectory, done
 
 	afterEach (done)->
 		fs.unlink @localFileWritePath, ->
