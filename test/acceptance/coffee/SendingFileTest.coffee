@@ -31,8 +31,9 @@ describe "Filestore", ->
 		FilestoreApp.ensureRunning done
 
 	after (done) ->
-		fs.unlinkSync @localFileReadPath
-		fs.rmdir @tmpDirectory, done
+		FilestoreApp.stop () =>
+			fs.unlinkSync @localFileReadPath
+			fs.rmdir @tmpDirectory, done
 
 	afterEach (done)->
 		fs.unlink @localFileWritePath, ->
