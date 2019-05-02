@@ -26,7 +26,7 @@ describe "Filestore", ->
 		@filestoreUrl = "http://localhost:#{settings.internal.filestore.port}"
 		FilestoreApp.ensureRunning done
 
-	beforeEach (done)->
+	afterEach (done)->
 		fs.unlink @localFileWritePath, ->
 			done()
 
