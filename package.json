@@ -37,7 +37,7 @@
     "pngcrush": "0.0.3",
     "range-parser": "^1.0.2",
     "recluster": "^0.3.7",
-    "request": "2.14.0",
+    "request": "2.47.0",
     "response": "0.14.0",
     "rimraf": "2.2.8",
     "settings-sharelatex": "^1.1.0",
