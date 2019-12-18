@@ -18,7 +18,7 @@ settings =
 		# Choices are
 		# s3 - Amazon S3
 		# fs - local filesystem
-		if process.env['AWS_ACCESS_KEY_ID']? or process.env['S3_BUCKET_CREDENTIALS']?
+		if process.env['AWS_ACCESS_KEY_ID']
 			backend: "s3"
 			s3:
 				key: process.env['AWS_ACCESS_KEY_ID']
@@ -28,18 +28,6 @@ settings =
 				user_files: process.env['AWS_S3_USER_FILES_BUCKET_NAME']
 				template_files: process.env['AWS_S3_TEMPLATE_FILES_BUCKET_NAME']
 				public_files: process.env['AWS_S3_PUBLIC_FILES_BUCKET_NAME']
-			# if you are using S3, then fill in your S3 details below,
-			# or use env var with the same structure.
-			# s3:
-			# 	key: ""     # default
-			# 	secret: ""  # default
-			#
-			# s3BucketCreds:
-			#   bucketname1: # secrets for bucketname1
-			#     auth_key: ""
-			#     auth_secret: ""
-			#  bucketname2: # secrets for bucketname2...
-			s3BucketCreds: JSON.parse process.env['S3_BUCKET_CREDENTIALS'] if process.env['S3_BUCKET_CREDENTIALS']?
 		else
 			backend: "fs"
 			stores:

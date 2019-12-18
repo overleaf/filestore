@@ -13,7 +13,6 @@ let logger = require('logger-sharelatex')
 logger.initialize('filestore')
 const settings = require('settings-sharelatex')
 const fileController = require('./app/js/FileController')
-const bucketController = require('./app/js/BucketController')
 const keyBuilder = require('./app/js/KeyBuilder')
 const healthCheckController = require('./app/js/HealthCheckController')
 const domain = require('domain')
@@ -167,8 +166,6 @@ app.get(
   keyBuilder.publicProjectKey,
   fileController.directorySize
 )
-
-app.get('/bucket/:bucket/key/*', bucketController.getFile)
 
 app.get('/heapdump', (req, res, next) =>
   require('heapdump').writeSnapshot(
