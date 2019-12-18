@@ -1,11 +1,3 @@
-// TODO: This file was created by bulk-decaffeinate.
-// Sanity-check the conversion and remove this comment.
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 const fs = require('fs-extra')
 const path = require('path')
 const async = require('async')
@@ -28,20 +20,20 @@ const checkCanStoreFiles = function(callback) {
   const res = {
     send(code) {
       if (code !== 200) {
-        return callback(new Error(`non-200 code from getFile: ${code}`))
+        callback(new Error(`non-200 code from getFile: ${code}`))
       }
     }
   }
   myWritableStreamBuffer.send = res.send
-  return keyBuilder.userFileKey(req, res, function() {
+  keyBuilder.userFileKey(req, res, function() {
     fileController.getFile(req, myWritableStreamBuffer)
-    return myWritableStreamBuffer.on('close', function() {
+    myWritableStreamBuffer.on('close', function() {
       if (myWritableStreamBuffer.size() > 0) {
-        return callback()
+        callback()
       } else {
         const err = 'no data in write stream buffer for health check'
         logger.err({ err }, 'error performing health check')
-        return callback(err)
+        callback(err)
       }
     })
   })
@@ -52,7 +44,7 @@ const checkFileConvert = function(callback) {
     return callback()
   }
   const imgPath = path.join(settings.path.uploadFolder, '/tiny.pdf')
-  return async.waterfall(
+  async.waterfall(
     [
       cb => fs.copy('./tiny.pdf', imgPath, cb),
       cb => fileConverter.thumbnail(imgPath, cb),
@@ -66,14 +58,12 @@ const checkFileConvert = function(callback) {
 module.exports = {
   check(req, res) {
     logger.log({}, 'performing health check')
-    return async.parallel([checkFileConvert, checkCanStoreFiles], function(
-      err
-    ) {
-      if (err != null) {
+    async.parallel([checkFileConvert, checkCanStoreFiles], function(err) {
+      if (err) {
         logger.err({ err }, 'Health check: error running')
-        return res.send(500)
+        res.send(500)
       } else {
-        return res.send(200)
+        res.send(200)
       }
     })
   }
