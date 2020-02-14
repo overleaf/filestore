@@ -433,6 +433,12 @@ describe('S3PersistorManagerTests', function() {
         })
       })
 
+      it('should upload files in a single part', function() {
+        expect(S3Client.upload).to.have.been.calledWith(sinon.match.any, {
+          partSize: 100 * 1024 * 1024
+        })
+      })
+
       it('should meter the stream', function() {
         expect(ReadStream.pipe).to.have.been.calledWith(MeteredStream)
       })
