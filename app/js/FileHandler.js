@@ -204,7 +204,7 @@ async function _wrapWithRetry(method, ...params) {
       return result
     } catch (err) {
       if (OError.hasCauseInstanceOf(err, UpstreamError) && tries < maxTries) {
-        await sleep(delay)
+        await sleep(delay * (Math.random() + 0.5))
         tries++
         delay *= 2
       } else {
