@@ -26,6 +26,7 @@ class ConversionError extends BackwardCompatibleError {}
 class SettingsError extends BackwardCompatibleError {}
 class TimeoutError extends BackwardCompatibleError {}
 class InvalidParametersError extends BackwardCompatibleError {}
+class UpstreamError extends BackwardCompatibleError {}
 
 class FailedCommandError extends OError {
   constructor(command, code, stdout, stderr) {
@@ -52,5 +53,6 @@ module.exports = {
   HealthCheckError,
   SettingsError,
   TimeoutError,
-  InvalidParametersError
+  InvalidParametersError,
+  UpstreamError
 }

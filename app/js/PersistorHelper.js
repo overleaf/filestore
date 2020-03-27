@@ -2,7 +2,12 @@ const crypto = require('crypto')
 const Stream = require('stream')
 const logger = require('logger-sharelatex')
 const metrics = require('metrics-sharelatex')
-const { WriteError, ReadError, NotFoundError } = require('./Errors')
+const {
+  WriteError,
+  ReadError,
+  NotFoundError,
+  UpstreamError
+} = require('./Errors')
 const { promisify } = require('util')
 
 const pipeline = promisify(Stream.pipeline)
@@ -129,6 +134,15 @@ function wrapError(error, message, params, ErrorType) {
   ) {
     return new NotFoundError({
       message: 'no such file',
+      info: params
+    }).withCause(error)
+  } else if (
+    error instanceof UpstreamError ||
+    parseInt(error.code) >= 500 ||
+    (error.message && error.message.match(/^Cannot parse response as JSON.*/))
+  ) {
+    return new UpstreamError({
+      message: 'internal error from GCS',
       info: params
     }).withCause(error)
   } else {
