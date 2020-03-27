@@ -142,7 +142,7 @@ function wrapError(error, message, params, ErrorType) {
     (error.message && error.message.match(/^Cannot parse response as JSON.*/))
   ) {
     return new UpstreamError({
-      message: 'internal error from GCS',
+      message: 'internal error from upstream storage',
       info: params
     }).withCause(error)
   } else {
