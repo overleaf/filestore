@@ -1,11 +1,19 @@
-const { callbackify } = require('util')
+const { callbackify, promisify } = require('util')
 const fs = require('fs')
+const OError = require('@overleaf/o-error')
+const Settings = require('settings-sharelatex')
 const PersistorManager = require('./PersistorManager')
 const LocalFileWriter = require('./LocalFileWriter')
 const FileConverter = require('./FileConverter')
 const KeyBuilder = require('./KeyBuilder')
 const ImageOptimiser = require('./ImageOptimiser')
-const { ConversionError, InvalidParametersError } = require('./Errors')
+const {
+  ConversionError,
+  InvalidParametersError,
+  UpstreamError
+} = require('./Errors')
+
+const sleep = promisify(setTimeout)
 
 module.exports = {
   insertFile: callbackify(insertFile),
@@ -63,18 +71,27 @@ async function deleteProject(bucket, key) {
 async function getFile(bucket, key, opts) {
   opts = opts || {}
   if (!opts.format && !opts.style) {
-    return PersistorManager.promises.getFileStream(bucket, key, opts)
+    return _wrapWithRetry(
+      PersistorManager.promises.getFileStream,
+      bucket,
+      key,
+      opts
+    )
   } else {
-    return _getConvertedFile(bucket, key, opts)
+    return _wrapWithRetry(_getConvertedFile, bucket, key, opts)
   }
 }
 
 async function getFileSize(bucket, key) {
-  return PersistorManager.promises.getFileSize(bucket, key)
+  return _wrapWithRetry(PersistorManager.promises.getFileSize, bucket, key)
 }
 
 async function getDirectorySize(bucket, projectId) {
-  return PersistorManager.promises.directorySize(bucket, projectId)
+  return _wrapWithRetry(
+    PersistorManager.promises.directorySize,
+    bucket,
+    projectId
+  )
 }
 
 async function _getConvertedFile(bucket, key, opts) {
@@ -174,4 +191,25 @@ async function _writeFileToDisk(bucket, key, opts) {
     opts
   )
   return LocalFileWriter.promises.writeStream(fileStream, key)
+}
+
+async function _wrapWithRetry(method, ...params) {
+  const maxTries = Settings.maxRetries || 5
+  let delay = Settings.retryDelay || 125
+  let tries = 0
+
+  while (true) {
+    try {
+      const result = await method(...params)
+      return result
+    } catch (err) {
+      if (OError.hasCauseInstanceOf(err, UpstreamError) && tries < maxTries) {
+        await sleep(delay)
+        tries++
+        delay *= 2
+      } else {
+        throw err
+      }
+    }
+  }
 }

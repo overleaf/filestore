@@ -4,6 +4,7 @@ const { expect } = chai
 const modulePath = '../../../app/js/FileHandler.js'
 const SandboxedModule = require('sandboxed-module')
 const { ObjectId } = require('mongodb')
+const Errors = require('../../../app/js/Errors')
 
 chai.use(require('sinon-chai'))
 chai.use(require('chai-as-promised'))
@@ -16,12 +17,10 @@ describe('FileHandler', function() {
     ImageOptimiser,
     FileHandler,
     fs
-  const settings = {
-    s3: {
-      buckets: {
-        user_files: 'user_files'
-      }
-    }
+
+  const Settings = {
+    retryDelay: 1,
+    maxRetries: 2
   }
 
   const bucket = 'my_bucket'
@@ -78,12 +77,13 @@ describe('FileHandler', function() {
 
     FileHandler = SandboxedModule.require(modulePath, {
       requires: {
-        'settings-sharelatex': settings,
+        'settings-sharelatex': Settings,
         './PersistorManager': PersistorManager,
         './LocalFileWriter': LocalFileWriter,
         './FileConverter': FileConverter,
         './KeyBuilder': KeyBuilder,
         './ImageOptimiser': ImageOptimiser,
+        './Errors': Errors,
         fs: fs
       },
       globals: { console }
@@ -268,6 +268,47 @@ describe('FileHandler', function() {
           expect(err).not.to.exist
           expect(FileConverter.promises.thumbnail).not.to.have.been.called
           expect(FileConverter.promises.preview).to.have.been.called
+          done()
+        })
+      })
+    })
+
+    describe('when upstream returns an internal error', function() {
+      it('should retry if upstream returns an error', function(done) {
+        PersistorManager.promises.getFileStream
+          .onCall(0)
+          .rejects(new Errors.UpstreamError())
+        FileHandler.getFile(bucket, key, null, (err, stream) => {
+          expect(err).not.to.exist
+          expect(stream).to.equal(sourceStream)
+          expect(PersistorManager.promises.getFileStream).to.have.been
+            .calledTwice
+          done()
+        })
+      })
+
+      it('should retry if upstream returns an error a second time', function(done) {
+        PersistorManager.promises.getFileStream
+          .onCall(0)
+          .rejects(new Errors.UpstreamError())
+        PersistorManager.promises.getFileStream
+          .onCall(1)
+          .rejects(new Errors.UpstreamError())
+        FileHandler.getFile(bucket, key, null, (err, stream) => {
+          expect(err).not.to.exist
+          expect(stream).to.equal(sourceStream)
+          expect(PersistorManager.promises.getFileStream).to.have.been
+            .calledThrice
+          done()
+        })
+      })
+
+      it('should not retry if upstream returns an error too many times', function(done) {
+        PersistorManager.promises.getFileStream = sinon
+          .stub()
+          .rejects(new Errors.UpstreamError())
+        FileHandler.getFile(bucket, key, null, err => {
+          expect(err).to.be.instanceOf(Errors.UpstreamError)
           done()
         })
       })
