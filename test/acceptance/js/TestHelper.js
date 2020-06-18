@@ -38,7 +38,7 @@ async function uploadStringToPersistor(persistor, bucket, key, content) {
 }
 
 async function getStringFromPersistor(persistor, bucket, key) {
-  const stream = await persistor.promises.getFileStream(bucket, key, {})
+  const stream = await persistor.promises.getObjectStream(bucket, key, {})
   return streamToString(stream)
 }
 

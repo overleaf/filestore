@@ -4,6 +4,7 @@ const { expect } = chai
 const modulePath = '../../../app/js/FileHandler.js'
 const SandboxedModule = require('sandboxed-module')
 const { ObjectId } = require('mongodb')
+const { Errors } = require('@overleaf/object-persistor')
 
 chai.use(require('sinon-chai'))
 chai.use(require('chai-as-promised'))
@@ -33,10 +34,10 @@ describe('FileHandler', function() {
   beforeEach(function() {
     PersistorManager = {
       promises: {
-        getFileStream: sinon.stub().resolves(sourceStream),
+        getObjectStream: sinon.stub().resolves(sourceStream),
         getRedirectUrl: sinon.stub().resolves(redirectUrl),
-        checkIfFileExists: sinon.stub().resolves(),
-        deleteFile: sinon.stub().resolves(),
+        checkIfObjectExists: sinon.stub().resolves(),
+        deleteObject: sinon.stub().resolves(),
         deleteDirectory: sinon.stub().resolves(),
         sendStream: sinon.stub().resolves(),
         insertFile: sinon.stub().resolves(),
@@ -73,6 +74,8 @@ describe('FileHandler', function() {
       createReadStream: sinon.stub().returns(readStream)
     }
 
+    const ObjectPersistor = { Errors }
+
     FileHandler = SandboxedModule.require(modulePath, {
       requires: {
         './PersistorManager': PersistorManager,
@@ -81,6 +84,7 @@ describe('FileHandler', function() {
         './KeyBuilder': KeyBuilder,
         './ImageOptimiser': ImageOptimiser,
         'settings-sharelatex': Settings,
+        '@overleaf/object-persistor': ObjectPersistor,
         fs: fs
       },
       globals: { console }
@@ -150,7 +154,7 @@ describe('FileHandler', function() {
     it('should tell the filestore manager to delete the file', function(done) {
       FileHandler.deleteFile(bucket, key, err => {
         expect(err).not.to.exist
-        expect(PersistorManager.promises.deleteFile).to.have.been.calledWith(
+        expect(PersistorManager.promises.deleteObject).to.have.been.calledWith(
           bucket,
           key
         )
@@ -234,11 +238,9 @@ describe('FileHandler', function() {
       const options = { start: 0, end: 8 }
       FileHandler.getFile(bucket, key, options, err => {
         expect(err).not.to.exist
-        expect(PersistorManager.promises.getFileStream).to.have.been.calledWith(
-          bucket,
-          key,
-          options
-        )
+        expect(
+          PersistorManager.promises.getObjectStream
+        ).to.have.been.calledWith(bucket, key, options)
         done()
       })
     })
@@ -266,14 +268,14 @@ describe('FileHandler', function() {
           expect(result.err).not.to.exist
           expect(result.stream).to.equal(readStream)
           expect(
-            PersistorManager.promises.getFileStream
+            PersistorManager.promises.getObjectStream
           ).to.have.been.calledWith(bucket, key)
         })
       })
 
       describe('when the file is cached', function() {
         beforeEach(function(done) {
-          PersistorManager.promises.checkIfFileExists = sinon
+          PersistorManager.promises.checkIfObjectExists = sinon
             .stub()
             .resolves(true)
           FileHandler.getFile(bucket, key, { format: 'png' }, (err, stream) => {
@@ -294,7 +296,7 @@ describe('FileHandler', function() {
           expect(result.err).not.to.exist
           expect(result.stream).to.equal(sourceStream)
           expect(
-            PersistorManager.promises.getFileStream
+            PersistorManager.promises.getObjectStream
           ).to.have.been.calledWith(bucket, convertedKey)
         })
       })

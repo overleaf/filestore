@@ -139,7 +139,7 @@ function copyFile(req, res, next) {
   })
   req.requestLogger.setMessage('copying file')
 
-  PersistorManager.copyFile(
+  PersistorManager.copyObject(
     bucket,
     `${oldProjectId}/${oldFileId}`,
     key,

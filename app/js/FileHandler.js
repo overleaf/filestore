@@ -51,7 +51,7 @@ async function deleteFile(bucket, key) {
       convertedKey
     })
   }
-  const jobs = [PersistorManager.promises.deleteFile(bucket, key)]
+  const jobs = [PersistorManager.promises.deleteObject(bucket, key)]
   if (Settings.enableConversions) {
     jobs.push(PersistorManager.promises.deleteDirectory(bucket, convertedKey))
   }
@@ -71,7 +71,7 @@ async function deleteProject(bucket, key) {
 async function getFile(bucket, key, opts) {
   opts = opts || {}
   if (!opts.format && !opts.style) {
-    return PersistorManager.promises.getFileStream(bucket, key, opts)
+    return PersistorManager.promises.getObjectStream(bucket, key, opts)
   } else {
     return _getConvertedFile(bucket, key, opts)
   }
@@ -96,7 +96,7 @@ async function getRedirectUrl(bucket, key, opts) {
 }
 
 async function getFileSize(bucket, key) {
-  return PersistorManager.promises.getFileSize(bucket, key)
+  return PersistorManager.promises.getObjectSize(bucket, key)
 }
 
 async function getDirectorySize(bucket, projectId) {
@@ -105,12 +105,12 @@ async function getDirectorySize(bucket, projectId) {
 
 async function _getConvertedFile(bucket, key, opts) {
   const convertedKey = KeyBuilder.addCachingToKey(key, opts)
-  const exists = await PersistorManager.promises.checkIfFileExists(
+  const exists = await PersistorManager.promises.checkIfObjectExists(
     bucket,
     convertedKey
   )
   if (exists) {
-    return PersistorManager.promises.getFileStream(bucket, convertedKey, opts)
+    return PersistorManager.promises.getObjectStream(bucket, convertedKey, opts)
   } else {
     return _getConvertedFileAndCache(bucket, key, convertedKey, opts)
   }
@@ -195,7 +195,7 @@ async function _convertFile(bucket, originalKey, opts) {
 }
 
 async function _writeFileToDisk(bucket, key, opts) {
-  const fileStream = await PersistorManager.promises.getFileStream(
+  const fileStream = await PersistorManager.promises.getObjectStream(
     bucket,
     key,
     opts
