@@ -32,7 +32,7 @@ describe('FileController', function() {
   beforeEach(function() {
     PersistorManager = {
       sendStream: sinon.stub().yields(),
-      copyObject: sinon.stub().yields(),
+      copyObject: sinon.stub().resolves(),
       deleteObject: sinon.stub().yields()
     }
 
@@ -275,7 +275,7 @@ describe('FileController', function() {
     })
 
     it('should send a 404 if the original file was not found', function(done) {
-      PersistorManager.copyObject.yields(
+      PersistorManager.copyObject.rejects(
         new Errors.NotFoundError({ message: 'not found', info: {} })
       )
       res.sendStatus = code => {
@@ -285,10 +285,12 @@ describe('FileController', function() {
       FileController.copyFile(req, res, next)
     })
 
-    it('should send an error if there was an error', function() {
-      PersistorManager.copyObject.yields(error)
-      FileController.copyFile(req, res, next)
-      expect(next).to.have.been.calledWith(error)
+    it('should send an error if there was an error', function(done) {
+      PersistorManager.copyObject.rejects(error)
+      FileController.copyFile(req, res, err => {
+        expect(err).to.equal(error)
+        done()
+      })
     })
   })
 
