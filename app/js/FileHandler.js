@@ -124,12 +124,11 @@ async function _getConvertedFileAndCache(bucket, key, convertedKey, opts) {
     await PersistorManager.sendFile(bucket, convertedKey, convertedFsPath)
   } catch (err) {
     LocalFileWriter.deleteFile(convertedFsPath, () => {})
-    throw new ConversionError('failed to convert file', {
-      opts,
-      bucket,
-      key,
-      convertedKey
-    }).withCause(err)
+    throw new ConversionError(
+      'failed to convert file',
+      { opts, bucket, key, convertedKey },
+      err
+    )
   }
   // Send back the converted file from the local copy to avoid problems
   // with the file not being present in S3 yet.  As described in the
@@ -155,11 +154,11 @@ async function _convertFile(bucket, originalKey, opts) {
   try {
     originalFsPath = await _writeFileToDisk(bucket, originalKey, opts)
   } catch (err) {
-    throw new ConversionError('unable to write file to disk', {
-      bucket,
-      originalKey,
-      opts
-    }).withCause(err)
+    throw new ConversionError(
+      'unable to write file to disk',
+      { bucket, originalKey, opts },
+      err
+    )
   }
 
   let promise
@@ -180,11 +179,11 @@ async function _convertFile(bucket, originalKey, opts) {
   try {
     destPath = await promise
   } catch (err) {
-    throw new ConversionError('error converting file', {
-      bucket,
-      originalKey,
-      opts
-    }).withCause(err)
+    throw new ConversionError(
+      'error converting file',
+      { bucket, originalKey, opts },
+      err
+    )
   }
   LocalFileWriter.deleteFile(originalFsPath, function() {})
   return destPath

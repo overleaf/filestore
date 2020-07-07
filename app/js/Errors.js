@@ -9,12 +9,9 @@ class InvalidParametersError extends OError {}
 
 class FailedCommandError extends OError {
   constructor(command, code, stdout, stderr) {
-    super({
-      message: 'command failed with error exit code',
-      info: {
-        command,
-        code
-      }
+    super('command failed with error exit code', {
+      command,
+      code
     })
     this.stdout = stdout
     this.stderr = stderr
