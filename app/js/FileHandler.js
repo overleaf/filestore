@@ -168,6 +168,8 @@ async function _convertFile(bucket, originalKey, opts) {
     promise = FileConverter.promises.thumbnail(originalFsPath)
   } else if (opts.style === 'preview') {
     promise = FileConverter.promises.preview(originalFsPath)
+  } else if (opts.style === 'imageOptim') {
+    promise = FileConverter.promises.imageOptim(originalFsPath)
   } else {
     throw new ConversionError('invalid file conversion options', {
       bucket,

@@ -12,10 +12,12 @@ const KILL_SIGNAL = 'SIGTERM'
 module.exports = {
   convert: callbackify(convert),
   thumbnail: callbackify(thumbnail),
+  imageOptim: callbackify(imageOptim),
   preview: callbackify(preview),
   promises: {
     convert,
     thumbnail,
+    imageOptim,
     preview
   }
 }
@@ -47,6 +49,22 @@ async function thumbnail(sourcePath) {
     `${sourcePath}[0]`,
     '-resize',
     width
+  ])
+}
+
+async function imageOptim(sourcePath) {
+  const width = '60x'
+  return _convert(sourcePath, 'png', [
+    'convert',
+    `${sourcePath}[0]`,
+    '-background',
+    'white',
+    '-flatten',
+    '-resize',
+    width,
+    '-strip',
+    '-alpha',
+    'off'
   ])
 }
 
