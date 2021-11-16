@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@google-cloud/storage": "^5.1.2",
-    "aws-sdk": "^2.718.0",
+    "aws-sdk": "^2.814.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "disrequire": "^1.1.0",
